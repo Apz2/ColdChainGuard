@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ColdChainGuard Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --ok: #22c55e;
+      --tile-bg: #162032;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1rem 1.25rem 1.25rem;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    header .subtitle {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .kpi-tile {
+      background: var(--tile-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+    }
+
+    .kpi-tile .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-tile .value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .kpi-tile.danger .value { color: var(--danger); }
+    .kpi-tile.warn .value { color: var(--warn); }
+
+    .main-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      min-height: 340px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel h2 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.65rem;
+      font-weight: 600;
+    }
+
+    .chart-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 280px;
+    }
+
+    .alert-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      max-height: 300px;
+    }
+
+    .alert-item {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .alert-item.critical { border-left: 3px solid var(--danger); }
+    .alert-item.warn { border-left: 3px solid var(--warn); }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+    }
+
+    .alert-id {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .action-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #0f1419;
+    }
+
+    .action-label.quarantine { color: var(--danger); border-color: var(--danger); }
+    .action-label.investigate { color: var(--warn); border-color: var(--warn); }
+    .action-label.monitor { color: var(--ok); border-color: var(--ok); }
+
+    .alert-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 1rem 0;
+      text-align: center;
+    }
+
+    .custody-strip {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+
+    .custody-strip h2 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .custody-chain {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.25rem;
+    }
+
+    .custody-node {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .custody-node .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--border);
+      margin: 0 auto 0.4rem;
+      border: 2px solid var(--border);
+    }
+
+    .custody-node.active .dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    .custody-node.complete .dot {
+      background: var(--ok);
+      border-color: var(--ok);
+    }
+
+    .custody-node .name {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .custody-node.active .name,
+    .custody-node.complete .name {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .custody-arrow {
+      color: var(--border);
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: -1.2rem;
+    }
+
+    .status-bar {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>ColdChainGuard</h1>
+      <div class="subtitle">Pharmaceutical cold chain integrity monitor</div>
+    </div>
+    <div class="subtitle" id="last-updated">Polling…</div>
+  </header>
+
+  <section class="kpi-row" aria-label="Key performance indicators">
+    <div class="kpi-tile">
+      <div class="label">Active consignments</div>
+      <div class="value" id="kpi-active">—</div>
+    </div>
+    <div class="kpi-tile danger" id="kpi-excursion-tile">
+      <div class="label">In excursion</div>
+      <div class="value" id="kpi-excursion">—</div>
+    </div>
+    <div class="kpi-tile warn" id="kpi-offline-tile">
+      <div class="label">Devices offline</div>
+      <div class="value" id="kpi-offline">—</div>
+    </div>
+    <div class="kpi-tile danger" id="kpi-doses-tile">
+      <div class="label">Doses at risk</div>
+      <div class="value" id="kpi-doses">—</div>
+    </div>
+  </section>
+
+  <section class="main-row">
+    <div class="panel">
+      <h2>Live temperature — <span id="chart-consignment">all consignments</span></h2>
+      <div class="chart-wrap">
+        <canvas id="temp-chart"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Alerts</h2>
+      <ul class="alert-list" id="alert-list">
+        <li class="empty-state">No open alerts</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="custody-strip">
+    <h2>Custody chain</h2>
+    <div class="custody-chain" id="custody-chain">
+      <div class="custody-node" data-stage="0">
+        <div class="dot"></div>
+        <div class="name">Manufacturer</div>
+      </div>
+      <span class="custody-arrow" aria-hidden="true">→</span>
+      <div class="custody-node" data-stage="1">
+        <div class="dot"></div>
+        <div class="name">Vehicle</div>
+      </div>
+      <span class="custody-arrow" aria-hidden="true">→</span>
+      <div class="custody-node" data-stage="2">
+        <div class="dot"></div>
+        <div class="name">Regional store</div>
+      </div>
+      <span class="custody-arrow" aria-hidden="true">→</span>
+      <div class="custody-node" data-stage="3">
+        <div class="dot"></div>
+        <div class="name">Last mile</div>
+      </div>
+      <span class="custody-arrow" aria-hidden="true">→</span>
+      <div class="custody-node" data-stage="4">
+        <div class="dot"></div>
+        <div class="name">Clinic</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

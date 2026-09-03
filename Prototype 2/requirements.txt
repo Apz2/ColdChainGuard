@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+amqtt
+paho-mqtt
+pyyaml
+numpy
+pandas
+matplotlib

@@ -1,0 +1,20 @@
+CN-0417:
+  product: "COVID-19 mRNA vaccine"
+  low_limit_c: 2.0
+  high_limit_c: 8.0
+  doses: 3400
+  budget_dm: 300.0
+
+CN-0418:
+  product: "Insulin vials"
+  low_limit_c: 2.0
+  high_limit_c: 8.0
+  doses: 1800
+  budget_dm: 240.0
+
+CN-0419:
+  product: "Influenza vaccine"
+  low_limit_c: 2.0
+  high_limit_c: 8.0
+  doses: 5200
+  budget_dm: 300.0

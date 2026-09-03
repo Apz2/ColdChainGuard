@@ -1,0 +1,5 @@
+NODE-01: { key: "a3f1c9e27b4d8065", consignment: "CN-0417" }
+NODE-02: { key: "7e2b5da914c06f38", consignment: "CN-0417" }
+NODE-03: { key: "c81f30ba62d97e45", consignment: "CN-0417" }
+NODE-04: { key: "9d4e18c27a0b5f63", consignment: "CN-0418" }
+NODE-05: { key: "b6a2f0471c83de59", consignment: "CN-0419" }
